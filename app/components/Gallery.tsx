@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- uploaded R2/OBS images have dynamic URLs */
 
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useState } from "react";
 
 export type Artwork = {
   id: number;
@@ -14,24 +14,6 @@ export type Artwork = {
 
 const PAGE_SIZE = 12;
 
-type LadderDragState = {
-  pointerId: number;
-  startClientY: number;
-  startScrollY: number;
-  trackTravel: number;
-  pageTravel: number;
-};
-
-function updatePlatformPosition(progress: number, ladder: HTMLDivElement | null, platform: HTMLButtonElement | null) {
-  if (!ladder || !platform) return;
-  const clamped = Math.max(0, Math.min(1, progress));
-  const platformTravel = Math.max(0, ladder.clientHeight - platform.offsetHeight);
-  const percentage = Math.round(clamped * 100);
-  platform.style.setProperty("--scroll-offset", `${clamped * platformTravel}px`);
-  platform.setAttribute("aria-valuenow", String(percentage));
-  platform.setAttribute("aria-valuetext", `${percentage}% down the page`);
-}
-
 export function ArtworkVisual({ artwork, index = 0 }: { artwork: Artwork; index?: number }) {
   if (artwork.imageUrl) return <img src={artwork.imageUrl} alt={artwork.title} loading="lazy" />;
   const variants = ["one", "two", "three", "four", "five", "six"];
@@ -43,10 +25,6 @@ export function Gallery() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Artwork | null>(null);
-  const ladderRef = useRef<HTMLDivElement>(null);
-  const platformRef = useRef<HTMLButtonElement>(null);
-  const dragState = useRef<LadderDragState | null>(null);
-  const dragFrame = useRef<number | null>(null);
 
   useEffect(() => {
     fetch("/api/artworks?limit=100")
@@ -63,96 +41,11 @@ export function Gallery() {
     return () => window.removeEventListener("keydown", close);
   }, [selected]);
 
-  useEffect(() => {
-    let progressFrame: number | null = null;
-    const updateProgress = () => {
-      if (progressFrame !== null) return;
-      progressFrame = requestAnimationFrame(() => {
-        const available = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = available > 0 ? Math.min(1, window.scrollY / available) : 0;
-        updatePlatformPosition(progress, ladderRef.current, platformRef.current);
-        progressFrame = null;
-      });
-    };
-    updateProgress();
-    window.addEventListener("scroll", updateProgress, { passive: true });
-    window.addEventListener("resize", updateProgress);
-    return () => {
-      window.removeEventListener("scroll", updateProgress);
-      window.removeEventListener("resize", updateProgress);
-      if (progressFrame !== null) cancelAnimationFrame(progressFrame);
-    };
-  }, [works, page]);
-
-  useEffect(() => () => {
-    document.documentElement.classList.remove("ladder-dragging");
-    if (dragFrame.current !== null) cancelAnimationFrame(dragFrame.current);
-  }, []);
-
   const pages = Math.max(1, Math.ceil(works.length / PAGE_SIZE));
   const visible = works.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  function scrollFromPlatform(clientY: number) {
-    const state = dragState.current;
-    const ladder = ladderRef.current;
-    const platform = platformRef.current;
-    if (!state || !ladder || !platform) return;
-    const fingerTravel = clientY - state.startClientY;
-    const targetScroll = Math.max(0, Math.min(state.pageTravel, state.startScrollY + (fingerTravel / state.trackTravel) * state.pageTravel));
-    const progress = state.pageTravel > 0 ? targetScroll / state.pageTravel : 0;
-    if (dragFrame.current !== null) cancelAnimationFrame(dragFrame.current);
-    dragFrame.current = requestAnimationFrame(() => {
-      updatePlatformPosition(progress, ladder, platform);
-      window.scrollTo({ top: targetScroll, behavior: "auto" });
-      dragFrame.current = null;
-    });
-  }
-
-  function startPlatformDrag(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (!event.isPrimary || dragState.current) return;
-    event.preventDefault();
-    const ladder = ladderRef.current;
-    if (!ladder) return;
-    const pageTravel = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    dragState.current = {
-      pointerId: event.pointerId,
-      startClientY: event.clientY,
-      startScrollY: window.scrollY,
-      trackTravel: Math.max(1, ladder.clientHeight - event.currentTarget.offsetHeight),
-      pageTravel,
-    };
-    document.documentElement.classList.add("ladder-dragging");
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  function movePlatform(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (dragState.current?.pointerId !== event.pointerId) return;
-    const samples = event.nativeEvent.getCoalescedEvents?.() || [];
-    scrollFromPlatform(samples.at(-1)?.clientY ?? event.clientY);
-  }
-
-  function stopPlatformDrag(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (dragState.current?.pointerId !== event.pointerId) return;
-    dragState.current = null;
-    document.documentElement.classList.remove("ladder-dragging");
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-  }
-
-  function platformKeyScroll(event: ReactKeyboardEvent<HTMLButtonElement>) {
-    const pageTravel = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    const step = Math.max(120, window.innerHeight * 0.15);
-    if (event.key === "ArrowUp") window.scrollBy({ top: -step, behavior: "smooth" });
-    else if (event.key === "ArrowDown") window.scrollBy({ top: step, behavior: "smooth" });
-    else if (event.key === "PageUp") window.scrollBy({ top: -window.innerHeight * 0.85, behavior: "smooth" });
-    else if (event.key === "PageDown") window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" });
-    else if (event.key === "Home") window.scrollTo({ top: 0, behavior: "smooth" });
-    else if (event.key === "End") window.scrollTo({ top: pageTravel, behavior: "smooth" });
-    else return;
-    event.preventDefault();
-  }
-
   return (
-    <main id="archive-scroll-region" className="archive-page">
+    <main className="archive-page">
       <div className="site-shell">
         <header className="site-header">
           <a className="wordmark" href="#top">NiboNobu’s Art Archive</a>
@@ -185,30 +78,8 @@ export function Gallery() {
         </section>
 
         <footer className="footer">
-          <p>Thanks for stopping by.</p>
+          <p>THANKS FOR STOPPING BY.</p>
         </footer>
-      </div>
-
-      <div ref={ladderRef} className="archive-ladder">
-        <button
-          ref={platformRef}
-          className="archive-platform"
-          type="button"
-          role="scrollbar"
-          aria-label="Page position"
-          aria-controls="archive-scroll-region"
-          aria-orientation="vertical"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={0}
-          aria-valuetext="0% down the page"
-          onPointerDown={startPlatformDrag}
-          onPointerMove={movePlatform}
-          onPointerUp={stopPlatformDrag}
-          onPointerCancel={stopPlatformDrag}
-          onLostPointerCapture={stopPlatformDrag}
-          onKeyDown={platformKeyScroll}
-        ><span /><span /></button>
       </div>
 
       {selected && <div className="modal" role="dialog" aria-modal="true" aria-label="Artwork details">
