@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "nibonobu-d1-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-12",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "test-database",
+      "database_id": "6a722324-79ea-4bf1-99d4-85871161d77e"
+    }
+  ]
+}
