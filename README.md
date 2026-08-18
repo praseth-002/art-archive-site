@@ -120,11 +120,6 @@ identity needs permission to get and patch the
 `nibonobu-art-archive` Deployment and to read its rollout status. It should not
 have permission to read or change `nibonobu-secrets`.
 
-After all four secrets are configured and a manual deployment is ready to be
-tested, add the environment variable `ENABLE_PRODUCTION_DEPLOY` with the exact
-value `true`. Until this switch is enabled, pushes still run validation but skip
-publishing and deployment, which keeps the initial repository setup safe.
-
 The workflow can also be started manually from GitHub's Actions page. For the
 first production run, use this manual trigger and watch the rollout before
 relying on automatic deployments from `main`.

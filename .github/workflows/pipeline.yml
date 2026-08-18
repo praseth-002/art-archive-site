@@ -42,10 +42,7 @@ jobs:
 
   release:
     name: Publish and deploy
-    if: >-
-      github.event_name != 'pull_request' &&
-      github.ref == 'refs/heads/main' &&
-      vars.ENABLE_PRODUCTION_DEPLOY == 'true'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: validate
     runs-on: ubuntu-latest
     environment: production
