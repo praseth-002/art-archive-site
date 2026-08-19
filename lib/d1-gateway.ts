@@ -1,4 +1,4 @@
-import { runtime } from "./runtime";
+import { dataServicesEnabled, runtime } from "./runtime";
 
 export type StoredArtwork = {
   id: number;
@@ -11,6 +11,7 @@ export type StoredArtwork = {
 };
 
 function configuration() {
+  if (!dataServicesEnabled()) throw new Error("Data services are temporarily disabled.");
   const { D1_GATEWAY_URL: url, D1_GATEWAY_SECRET: secret } = runtime();
   if (!url || !secret) throw new Error("D1 gateway is not configured.");
   return { url: url.replace(/\/$/, ""), secret };

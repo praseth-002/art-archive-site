@@ -1,8 +1,10 @@
 import { requireAdmin } from "@/lib/auth";
 import { createArtwork, listArtworks } from "@/lib/d1-gateway";
 import { deleteArtworkObject, putArtwork } from "@/lib/r2-storage";
+import { dataServicesEnabled } from "@/lib/runtime";
 
 export async function GET(request: Request) {
+  if (!dataServicesEnabled()) return Response.json({ artworks: [] }, { headers: { "cache-control": "no-store" } });
   const url = new URL(request.url);
   const includeHidden = url.searchParams.get("admin") === "1" && await requireAdmin();
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 12));
@@ -20,6 +22,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     if (!await requireAdmin()) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!dataServicesEnabled()) return Response.json({ error: "Artwork storage is temporarily unavailable." }, { status: 503 });
     const form = await request.formData();
     const file = form.get("image");
     if (!(file instanceof File) || !file.type.startsWith("image/")) return Response.json({ error: "An image is required." }, { status: 400 });

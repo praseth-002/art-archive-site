@@ -1,9 +1,10 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { runtime } from "./runtime";
+import { dataServicesEnabled, runtime } from "./runtime";
 
 let client: S3Client | undefined;
 
 function configuration() {
+  if (!dataServicesEnabled()) throw new Error("Data services are temporarily disabled.");
   const env = runtime();
   const { R2_ENDPOINT: endpoint, R2_ACCESS_KEY_ID: accessKeyId, R2_SECRET_ACCESS_KEY: secretAccessKey, R2_BUCKET: bucket } = env;
   if (!endpoint || !accessKeyId || !secretAccessKey || !bucket) throw new Error("R2 storage is not configured.");

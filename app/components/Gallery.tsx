@@ -25,7 +25,7 @@ export function Gallery() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Artwork | null>(null);
-  const entranceClicks = useRef({ count: 0, lastClick: 0, opening: false });
+  const entranceClicks = useRef({ count: 0, lastClick: 0 });
 
   useEffect(() => {
     fetch("/api/artworks?limit=100")
@@ -45,20 +45,16 @@ export function Gallery() {
   const pages = Math.max(1, Math.ceil(works.length / PAGE_SIZE));
   const visible = works.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  async function tryAdminEntrance() {
+  function tryAdminEntrance() {
     const now = Date.now();
     const state = entranceClicks.current;
-    if (state.opening) return;
     if (now - state.lastClick > 1200) state.count = 0;
     state.lastClick = now;
     state.count += 1;
     if (state.count < 5) return;
 
     state.count = 0;
-    state.opening = true;
-    const response = await fetch("/api/auth/entrance", { method: "POST" }).catch(() => null);
-    if (response?.ok) window.location.assign("/admin");
-    else state.opening = false;
+    window.location.assign("/admin");
   }
 
   return (

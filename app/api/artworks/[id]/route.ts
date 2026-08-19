@@ -1,9 +1,11 @@
 import { requireAdmin } from "@/lib/auth";
 import { deleteArtworkRecord, updateArtwork } from "@/lib/d1-gateway";
 import { deleteArtworkObject } from "@/lib/r2-storage";
+import { dataServicesEnabled } from "@/lib/runtime";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireAdmin()) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!dataServicesEnabled()) return Response.json({ error: "Artwork storage is temporarily unavailable." }, { status: 503 });
   const { id } = await params;
   const body = await request.json() as Record<string, unknown>;
   await updateArtwork(Number(id), {
@@ -16,6 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireAdmin()) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!dataServicesEnabled()) return Response.json({ error: "Artwork storage is temporarily unavailable." }, { status: 503 });
   const { id } = await params;
   const result = await deleteArtworkRecord(Number(id));
   if (result.imageKey) await deleteArtworkObject(result.imageKey);

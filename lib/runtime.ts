@@ -7,6 +7,7 @@ export type RuntimeEnv = {
   R2_ACCESS_KEY_ID?: string;
   R2_SECRET_ACCESS_KEY?: string;
   R2_BUCKET?: string;
+  DATA_SERVICES_ENABLED?: string;
 };
 
 export function runtime(): RuntimeEnv {
@@ -19,5 +20,10 @@ export function runtime(): RuntimeEnv {
     R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
     R2_BUCKET: process.env.R2_BUCKET,
+    DATA_SERVICES_ENABLED: process.env.DATA_SERVICES_ENABLED,
   };
+}
+
+export function dataServicesEnabled() {
+  return runtime().DATA_SERVICES_ENABLED === "true";
 }
