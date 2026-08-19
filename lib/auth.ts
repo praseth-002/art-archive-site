@@ -3,6 +3,8 @@ import { runtime } from "./runtime";
 
 const COOKIE_NAME = "art_archive_session";
 const MAX_AGE = 60 * 60 * 24 * 14;
+const ENTRANCE_COOKIE_NAME = "art_archive_entrance";
+const ENTRANCE_MAX_AGE = 60 * 5;
 
 function toHex(bytes: ArrayBuffer) {
   return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -49,8 +51,16 @@ export async function createSessionCookie() {
   return createSignedCookie(COOKIE_NAME, "admin", MAX_AGE);
 }
 
+export async function createEntranceCookie() {
+  return createSignedCookie(ENTRANCE_COOKIE_NAME, "entrance", ENTRANCE_MAX_AGE);
+}
+
 export async function isAdmin() {
   return hasSignedCookie(COOKIE_NAME, "admin");
+}
+
+export async function hasAdminEntrance() {
+  return hasSignedCookie(ENTRANCE_COOKIE_NAME, "entrance");
 }
 
 export async function requireAdmin() {
@@ -58,3 +68,4 @@ export async function requireAdmin() {
 }
 
 export const sessionCookieName = COOKIE_NAME;
+export const entranceCookieName = ENTRANCE_COOKIE_NAME;
