@@ -1,13 +1,15 @@
-import { isAdmin } from "@/lib/auth";
+import { hasAdminEntrance, isAdmin } from "@/lib/auth";
 import { AdminStudio } from "../components/AdminStudio";
 import { LoginForm } from "../components/LoginForm";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const authenticated = await isAdmin();
   if (authenticated) return <main className="admin-page admin-studio-page"><AdminStudio /></main>;
+  if (!await hasAdminEntrance()) notFound();
   return (
     <main className="admin-page">
       <div className="admin-top">

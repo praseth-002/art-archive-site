@@ -80,7 +80,8 @@ a { color: inherit; text-decoration: none; }
 .page-button.active { border-color: var(--ink); }
 .page-button:disabled { opacity: .35; cursor: default; }
 .footer { border-top: 1px solid var(--line); padding: 40px 0 50px; display: flex; justify-content: center; color: var(--ink); font-size: .7rem; text-align: center; text-transform: uppercase; letter-spacing: .1em; }
-.footer p { margin: 0; }
+.entrance-trigger { border: 0; padding: 0; color: inherit; background: transparent; cursor: default; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+.entrance-trigger:focus-visible { outline: 1px solid var(--ink); outline-offset: 5px; }
 
 .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; }
 .modal-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(20,20,18,.88); cursor: zoom-out; }

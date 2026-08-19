@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- uploaded R2/OBS images have dynamic URLs */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type Artwork = {
   id: number;
@@ -25,6 +25,7 @@ export function Gallery() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Artwork | null>(null);
+  const entranceClicks = useRef({ count: 0, lastClick: 0, opening: false });
 
   useEffect(() => {
     fetch("/api/artworks?limit=100")
@@ -44,14 +45,27 @@ export function Gallery() {
   const pages = Math.max(1, Math.ceil(works.length / PAGE_SIZE));
   const visible = works.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  async function tryAdminEntrance() {
+    const now = Date.now();
+    const state = entranceClicks.current;
+    if (state.opening) return;
+    if (now - state.lastClick > 1200) state.count = 0;
+    state.lastClick = now;
+    state.count += 1;
+    if (state.count < 5) return;
+
+    state.count = 0;
+    state.opening = true;
+    const response = await fetch("/api/auth/entrance", { method: "POST" }).catch(() => null);
+    if (response?.ok) window.location.assign("/admin");
+    else state.opening = false;
+  }
+
   return (
     <main className="archive-page">
       <div className="site-shell">
         <header className="site-header">
           <a className="wordmark" href="#top">NiboNobu’s Art Archive</a>
-          <nav className="nav" aria-label="Main navigation">
-            <a className="admin-link" href="/admin">Upload artwork</a>
-          </nav>
         </header>
 
         <section id="top" aria-label="Artwork archive">
@@ -78,7 +92,7 @@ export function Gallery() {
         </section>
 
         <footer className="footer">
-          <p>THANKS FOR STOPPING BY.</p>
+          <button className="entrance-trigger" type="button" onClick={tryAdminEntrance}>THANKS FOR STOPPING BY.</button>
         </footer>
       </div>
 
